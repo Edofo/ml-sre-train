@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+namespace: recommender-dev
+images:
+  - name: gcr.io/edofo/ml-sre-train/recommender
+    newName: ml-sre-train
+    newTag: dev
