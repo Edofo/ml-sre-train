@@ -18,7 +18,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	rec := recommender.Recommender{}
+	rec := recommender.Stub{}
 
 	err := server.RunServer(port, &rec, logger)
 	if err != nil {
