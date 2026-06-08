@@ -1,10 +1,16 @@
-name: CI
+name: CI App
 
 on:
   push:
     branches: [main]
+    paths:
+      - "app/**"
+      - ".github/workflows/ci-app.yaml"
   pull_request:
     branches: [main]
+    paths:
+      - "app/**"
+      - ".github/workflows/ci-app.yaml"
 
 permissions:
   contents: read
@@ -106,3 +112,12 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  ci:
+    needs: [lint-test, image]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify required jobs
+        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+        run: exit 1
