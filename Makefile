@@ -30,6 +30,12 @@ up: ## Zero-to-running: cluster + image + load + deploy
 	$(MAKE) load
 	$(MAKE) deploy
 
+monitoring-up: ## Install the monitoring stack
+	helmfile -f observability/helmfile.yaml sync
+
+monitoring-down: ## Uninstall the monitoring stack
+	helmfile -f observability/helmfile.yaml destroy
+
 port-forward: ## Forward the service to localhost:8080
 	kubectl port-forward -n $(NS) svc/recommender 8080:8080
 
