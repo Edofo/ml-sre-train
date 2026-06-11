@@ -1,0 +1,52 @@
+apiVersion: sloth.slok.dev/v1
+kind: PrometheusServiceLevel
+metadata:
+  name: recommender
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: recommender
+spec:
+  service: "recommender"
+  labels:
+    owner: "nolan"
+    repo: "ml-sre-train"
+  slos:
+    - name: "requests-availability"
+      objective: 99.5
+      description: "Ratio of non-5xx responses on POST /recommend over 30 days."
+      sli:
+        events:
+          errorQuery: sum(rate(http_requests_total{path="/recommend",status=~"5.."}[{{.window}}]))
+          totalQuery: sum(rate(http_requests_total{path="/recommend"}[{{.window}}]))
+      alerting:
+        name: RecommenderHighErrorRate
+        labels:
+          category: availability
+        annotations:
+          summary: "High error rate on the recommender /recommend endpoint."
+        pageAlert:
+          labels:
+            severity: critical
+        ticketAlert:
+          labels:
+            severity: warning
+
+    - name: "requests-latency"
+      objective: 99
+      description: "Ratio of requests on POST /recommend served under 500ms over 30 days."
+      sli:
+        events:
+          errorQuery: sum(rate(http_request_duration_seconds_count{path="/recommend"}[{{.window}}])) - sum(rate(http_request_duration_seconds_bucket{path="/recommend",le="0.5"}[{{.window}}]))
+          totalQuery: sum(rate(http_request_duration_seconds_count{path="/recommend"}[{{.window}}]))
+      alerting:
+        name: RecommenderHighLatency
+        labels:
+          category: latency
+        annotations:
+          summary: "Too many slow requests (>500ms) on the recommender /recommend endpoint."
+        pageAlert:
+          labels:
+            severity: critical
+        ticketAlert:
+          labels:
+            severity: warning
