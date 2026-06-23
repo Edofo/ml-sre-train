@@ -5,7 +5,7 @@ KUSTOMIZE_DIR ?= infra/k8s/overlays/dev
 TF_DIR ?= infra/terraform/envs/dev
 
 .DEFAULT_GOAL := help
-.PHONY: help test image cluster-up load deploy up monitoring-up monitoring-down slo-generate port-forward down tf-validate fmt
+.PHONY: help test image cluster-up load deploy up monitoring-up monitoring-down slo-generate argocd-up gitops-bootstrap port-forward down tf-validate fmt
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -39,6 +39,12 @@ monitoring-down: ## Uninstall the monitoring stack
 slo-generate: ## Validate the Sloth spec and regenerate the SLO rules
 	sloth validate -i observability/slo/recommender-slos.yaml
 	sloth generate -i observability/slo/recommender-slos.yaml -o observability/slo/rules.yaml
+
+argocd-up: ## Install ArgoCD via Helmfile
+	helmfile -f gitops/helmfile.yaml sync
+
+gitops-bootstrap: ## Apply the root App-of-Apps
+	kubectl apply -f gitops/root-app.yaml
 
 port-forward: ## Forward the service to localhost:8080
 	kubectl port-forward -n $(NS) svc/recommender 8080:8080
